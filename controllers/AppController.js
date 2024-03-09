@@ -1,6 +1,6 @@
 // eslint-disable-next-line import/no-named-as-default
 import redisClient from '../utils/redis';
-import dbClient from '../utils/db';
+import { dbClient } from '../utils/db';
 
 export default class AppController {
   static getStatus(req, res) {
@@ -14,12 +14,12 @@ export default class AppController {
     try {
       const [usersCount, filesCount] = await Promise.all([
         dbClient.nbUsers(),
-        dbClient.nbFiles()
+        dbClient.nbFiles(),
       ]);
       res.status(200).json({ users: usersCount, files: filesCount });
     } catch (error) {
-      console.error("Error fetching stats:", error);
-      res.status(500).json({ error: "Internal Server Error" });
+      console.error('Error fetching stats:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
     }
   }
 }
