@@ -4,11 +4,11 @@ import Queue from 'bull/lib/queue';
 import dbClient from '../utils/db';
 
 const userQueue = new Queue('email sending');
+const usersCollection = dbClient.usersCollection.bind(dbClient);
 
 export default class UsersController {
   static async postNew(req, res) {
-    const email = req.body ? req.body.email : null;
-    const password = req.body ? req.body.password : null;
+    const { email, password } = req.body || {};
 
     if (!email) {
       res.status(400).json({ error: 'Missing email' });
@@ -18,14 +18,16 @@ export default class UsersController {
       res.status(400).json({ error: 'Missing password' });
       return;
     }
-    const user = await (await dbClient.usersCollection()).findOne({ email });
+
+    const user = await usersCollection().findOne({ email });
 
     if (user) {
       res.status(400).json({ error: 'Already exist' });
       return;
     }
-    const insertionInfo = await (await dbClient.usersCollection())
-      .insertOne({ email, password: sha1(password) });
+
+    const hashedPassword = sha1(password);
+    const insertionInfo = await usersCollection().insertOne({ email, password: hashedPassword });
     const userId = insertionInfo.insertedId.toString();
 
     userQueue.add({ userId });
